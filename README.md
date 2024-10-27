@@ -1,5 +1,45 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Prerequsites
+
+1. Install Redis via homebrew:
+
+```bash
+ brew install redis
+```
+
+2. Install [Postgres.app](https://postgresapp.com/) for Mac or via homebrew:
+
+```bash
+brew install postgresql@17
+```
+
+3. Run the following redis commands to start up and interact with a local Redis server, respectively:
+
+```bash
+redis-server
+redis-cli
+```
+
+4. Start/Stop PostgreSQL server:
+
+```bash
+brew services start postgresql@17
+brew services stop postgresql@17
+```
+
+5. Copy .env.template from project root and populate environment variables:
+
+```bash
+cp .env.template .env.local
+```
+
+6. Run the following command from the project root to set up local PostgreSQL DB:
+
+```bash
+npm run db-setup
+```
+
 ## Getting Started
 
 First, run the development server:
