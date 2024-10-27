@@ -20,10 +20,8 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
-
   const activeLink = '/dashboard';
-
+  const user = await getUser();
   return (
     <div className="flex min-h-screen w-full">
       <div className="hidden w-80 border-r lg:block">
@@ -57,7 +55,10 @@ export default async function Layout({
             </nav>
           </div>
           <div className="border-t p-4">
-            <LogoutButton />
+            <LogoutButton
+              userId={String(user?.user.id)}
+              sessionGUID={user?.sessionGUID ?? ''}
+            />
           </div>
         </div>
       </div>
