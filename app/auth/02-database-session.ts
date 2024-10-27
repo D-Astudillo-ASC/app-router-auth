@@ -1,3 +1,5 @@
+// This cannot be called from the client, attempting to do so will trigger a runtime error.
+
 import 'server-only';
 
 import { SignJWT, jwtVerify } from 'jose';
@@ -24,7 +26,7 @@ export async function decrypt(session: string | undefined = '') {
     });
     return payload;
   } catch (error) {
-    console.log('Failed to verify session');
+    console.error('Failed to decrypt session: ', error);
     return null;
   }
 }

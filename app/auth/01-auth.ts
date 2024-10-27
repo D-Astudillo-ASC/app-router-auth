@@ -1,3 +1,5 @@
+// This is for Server Actions, which can be called from the client but will be executed on the server.
+
 'use server';
 
 import { db } from '@/drizzle/db';
@@ -23,8 +25,6 @@ export async function signup(
     password: formData.get('password'),
   });
 
-  console.log('in signup 01-auth');
-
   // If any form fields are invalid, return early
   if (!validatedFields.success) {
     return {
@@ -37,7 +37,6 @@ export async function signup(
 
   // 3. Check if the user's email already exists
   try {
-    console.log('querying db for existing user');
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, email),
     });
@@ -77,7 +76,6 @@ export async function signup(
   // 4. Create a session for the user after successful OTP verification...
   const userId = user.id.toString();
 
-  // router.push('/login/otp-verification');
   await createSession(userId, name, 'testaccesstoken', email);
 
   redirect('/dashboard');
@@ -107,8 +105,6 @@ export async function login(
     where: eq(users.email, validatedFields.data.email),
   });
 
-  console.log(`user: ${JSON.stringify(user)}`);
-
   // If user is not found, return early
   if (!user) {
     return errorMessage;
@@ -119,8 +115,6 @@ export async function login(
     user.password,
   );
 
-  console.log(passwordMatch);
-
   // If the password does not match, return early
   if (!passwordMatch) {
     return errorMessage;
@@ -130,9 +124,6 @@ export async function login(
   const userId = user.id.toString();
   const userName = user.name;
   const email = user.email;
-
-  // router.push('/login/otp-verification');
-
   const accessToken = 'testaccesstoken';
 
   await createSession(userId, userName, accessToken, email);
@@ -141,5 +132,5 @@ export async function login(
 }
 
 export async function logout(sessionGUID: string, userId: string) {
-  deleteSession(sessionGUID, userId);
+  return await deleteSession(sessionGUID, userId);
 }

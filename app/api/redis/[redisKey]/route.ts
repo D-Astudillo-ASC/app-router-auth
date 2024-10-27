@@ -18,7 +18,7 @@ export const GET = async (
   try {
     const redis = getRedisInstance();
     const redisValue = await redis.get(redisKey);
-    return NextResponse.json({ value: `${redisValue}` });
+    return NextResponse.json({ value: `${redisValue ?? ''}` });
   } catch (error) {
     const err = error as Error;
     return NextResponse.json({

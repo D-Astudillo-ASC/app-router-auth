@@ -6,7 +6,6 @@ let redisInstance: Redis | null = null;
 
 export function getRedisInstance(config = getRedisConfiguration()) {
   if (redisInstance) {
-    console.log('redis instance exists!!!!');
     return redisInstance;
   }
 

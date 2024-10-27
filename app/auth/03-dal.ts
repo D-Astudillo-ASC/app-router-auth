@@ -1,3 +1,5 @@
+// This cannot be called from the client, attempting to do so will trigger a runtime error.
+
 import 'server-only';
 import { db } from '@/drizzle/db';
 import { eq } from 'drizzle-orm';
@@ -26,7 +28,7 @@ export const getUser = cache(async () => {
 
     return { user, sessionGUID };
   } catch (error) {
-    console.log('Failed to fetch user');
+    console.error('Failed to fetch user: ', error);
     return null;
   }
 });

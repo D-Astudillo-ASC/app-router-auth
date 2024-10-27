@@ -22,11 +22,8 @@ const storeSession = async (sessionGUID: string, session: string) => {
     if (!response.ok) {
       throw new Error('Failed to save session');
     }
-
-    console.log('Session created with GUID:', sessionGUID);
   } catch (error) {
     const err = error as Error;
-    console.log(err);
     console.error(
       `Error occurred while trying to save session in Redis: ${err.message}`,
     );
@@ -51,11 +48,8 @@ const deleteSessionFromRedis = async (sessionGUID: string) => {
     if (!response.ok) {
       throw new Error('Failed to delete session from redis.');
     }
-
-    console.log('Session delete with GUID:', sessionGUID);
   } catch (error) {
     const err = error as Error;
-    console.log(err);
     console.error(
       `Error occurred while trying to delete session in Redis: ${err.message}`,
     );
@@ -77,11 +71,8 @@ const deleteSessionGUIDFromRedis = async (userId: string) => {
     if (!response.ok) {
       throw new Error('Failed to delete session GUID from redis.');
     }
-
-    console.log('Session GUID deleted with userId:', userId);
   } catch (error) {
     const err = error as Error;
-    console.log(err);
     console.error(
       `Error occurred while trying to delete session GUID in Redis: ${err.message}`,
     );
@@ -104,11 +95,8 @@ const storeSessionGUID = async (userId: string, sessionGUID: string) => {
     if (!response.ok) {
       throw new Error('Failed to store session GUID in redis.');
     }
-
-    console.log('Session delete with GUID:', sessionGUID);
   } catch (error) {
     const err = error as Error;
-    console.log(err);
     console.error(
       `Error occurred while trying to delete session in Redis: ${err.message}`,
     );
@@ -135,7 +123,6 @@ const getSessionGUIDFromRedis = async (userId: string) => {
     return value as string;
   } catch (error) {
     const err = error as Error;
-    console.log(err);
     console.error(
       `Error occurred while trying to get session in Redis: ${err.message}`,
     );
@@ -181,13 +168,8 @@ export async function createSession(
 
   const sessionGUID = uuid();
 
-  console.log('session created');
-  console.log(session);
   await storeSession(sessionGUID, session);
   await storeSessionGUID(userId, sessionGUID);
-  console.log('decrypted session');
-
-  console.log(await decrypt(session));
 
   cookies().set('session', session, {
     httpOnly: true,
@@ -206,11 +188,16 @@ export async function verifySession() {
     redirect('/login');
   }
 
-  console.log('past redirect to login');
-  console.log(session);
   const payload = session as SessionPayload;
 
   const sessionGUID = await getSessionGUIDFromRedis(payload.userId);
+
+  if (!sessionGUID) {
+    if (session) {
+      cookies().delete('session');
+    }
+    redirect('/login');
+  }
 
   return {
     isAuth: true,
@@ -233,11 +220,8 @@ export async function updateSession() {
 
   const sessionGUID = uuid();
 
-  console.log('session created');
-  console.log(session);
   await storeSession(sessionGUID, session);
   await storeSessionGUID(payload.userId, sessionGUID);
-  // const redis = getRedisInstance();
 
   cookies().set('session', session, {
     httpOnly: true,
@@ -249,8 +233,13 @@ export async function updateSession() {
 }
 
 export async function deleteSession(sessionGUID: string, userId: string) {
-  cookies().delete('session');
-  await deleteSessionFromRedis(sessionGUID);
-  await deleteSessionGUIDFromRedis(userId);
-  redirect('/login');
+  try {
+    cookies().delete('session');
+    await deleteSessionFromRedis(sessionGUID);
+    await deleteSessionGUIDFromRedis(userId);
+    return { success: true };
+  } catch (error) {
+    console.error('Error occurred during session deletion:', error);
+    return { success: false, error: error as Error };
+  }
 }
