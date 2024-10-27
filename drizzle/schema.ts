@@ -29,6 +29,9 @@ export const sessions = pgTable('sessions', {
   userId: integer('userId')
     .references(() => users.id)
     .notNull(),
+  name: text('name').notNull(),
+  email: text('email').unique().notNull(),
+  accessToken: text('access_token').notNull(),
   expiresAt: timestamp('expires_at').notNull(),
 });
 
