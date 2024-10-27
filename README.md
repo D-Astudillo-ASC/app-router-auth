@@ -21,7 +21,7 @@ redis-server
 redis-cli
 ```
 
-4. Start/Stop PostgreSQL server:
+4. Start/Stop PostgreSQL server (for Homebrew installation):
 
 ```bash
 brew services start postgresql@17
