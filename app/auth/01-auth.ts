@@ -10,6 +10,7 @@ import {
 import { createSession, deleteSession } from '@/app/auth/02-stateless-session';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
 
 export async function signup(
   state: FormState,
@@ -22,6 +23,8 @@ export async function signup(
     password: formData.get('password'),
   });
 
+  console.log('in signup 01-auth');
+
   // If any form fields are invalid, return early
   if (!validatedFields.success) {
     return {
@@ -33,14 +36,21 @@ export async function signup(
   const { name, email, password } = validatedFields.data;
 
   // 3. Check if the user's email already exists
-  const existingUser = await db.query.users.findFirst({
-    where: eq(users.email, email),
-  });
+  try {
+    console.log('querying db for existing user');
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
 
-  if (existingUser) {
-    return {
-      message: 'Email already exists, please use a different email or login.',
-    };
+    if (existingUser) {
+      return {
+        message: 'Email already exists, please use a different email or login.',
+      };
+    }
+  } catch (e) {
+    const err = e as ErrorEvent;
+    console.error('Error occurred while fetching user from db');
+    console.error(err.error);
   }
 
   // Hash the user's password
@@ -64,9 +74,13 @@ export async function signup(
     };
   }
 
-  // 4. Create a session for the user
+  // 4. Create a session for the user after successful OTP verification...
   const userId = user.id.toString();
-  await createSession(userId);
+
+  // router.push('/login/otp-verification');
+  await createSession(userId, name, 'testaccesstoken', email);
+
+  redirect('/dashboard');
 }
 
 export async function login(
@@ -78,6 +92,7 @@ export async function login(
     email: formData.get('email'),
     password: formData.get('password'),
   });
+
   const errorMessage = { message: 'Invalid login credentials.' };
 
   // If any form fields are invalid, return early
@@ -92,6 +107,8 @@ export async function login(
     where: eq(users.email, validatedFields.data.email),
   });
 
+  console.log(`user: ${JSON.stringify(user)}`);
+
   // If user is not found, return early
   if (!user) {
     return errorMessage;
@@ -102,16 +119,27 @@ export async function login(
     user.password,
   );
 
+  console.log(passwordMatch);
+
   // If the password does not match, return early
   if (!passwordMatch) {
     return errorMessage;
   }
 
-  // 4. If login successful, create a session for the user and redirect
+  // 4. If login successful, prompt OTP verification... Then, create a session for the user and redirect after successful verification of OTP.
   const userId = user.id.toString();
-  await createSession(userId);
+  const userName = user.name;
+  const email = user.email;
+
+  // router.push('/login/otp-verification');
+
+  const accessToken = 'testaccesstoken';
+
+  await createSession(userId, userName, accessToken, email);
+
+  redirect('/dashboard');
 }
 
-export async function logout() {
-  deleteSession();
+export async function logout(sessionGUID: string, userId: string) {
+  deleteSession(sessionGUID, userId);
 }

@@ -29,7 +29,12 @@ export async function decrypt(session: string | undefined = '') {
   }
 }
 
-export async function createSession(id: number) {
+export async function createSession(
+  id: number,
+  userName: string,
+  email: string,
+  accessToken: string,
+) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   // 1. Create a session in the database
@@ -37,6 +42,9 @@ export async function createSession(id: number) {
     .insert(sessions)
     .values({
       userId: id,
+      name: userName,
+      email: email,
+      accessToken: accessToken,
       expiresAt,
     })
     // Return the session ID
@@ -44,8 +52,14 @@ export async function createSession(id: number) {
 
   const sessionId = data[0].id;
 
-  // 2. Encrypt the session ID
-  const session = await encrypt({ userId: id, expiresAt });
+  // 2. Encrypt the session
+  const session = await encrypt({
+    userId: String(id),
+    expiresAt,
+    accessToken,
+    userName,
+    email,
+  });
 
   // 3. Store the session in cookies for optimistic auth checks
   cookies().set('session', session, {
